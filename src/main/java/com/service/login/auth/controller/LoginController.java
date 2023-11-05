@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/api/user")
 public class LoginController {
 
     @Autowired
@@ -33,7 +33,7 @@ public class LoginController {
 
 
 
-    @PostMapping("/signin")
+    @PostMapping("/authenticate")
     public ResponseEntity<?> authenticateUser(@Valid @RequestBody LoginCO loginRequest) {
         ResponseDTO responseDTO = new ResponseDTO();
         Authentication authentication = authenticationManager.authenticate(

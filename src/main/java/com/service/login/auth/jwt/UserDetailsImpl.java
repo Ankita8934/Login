@@ -9,7 +9,6 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Objects;
 
-
 @Data
 public class UserDetailsImpl implements Serializable, UserDetails {
 
@@ -32,15 +31,17 @@ public class UserDetailsImpl implements Serializable, UserDetails {
         this.password = password;
     }
 
+    public static UserDetailsImpl build(User user) {
+
+        return new UserDetailsImpl(
+                user.getId(),
+                user.getEmail(),
+                user.getPassword());
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
-    }
-
-    @Override
-    public String getPassword() {
-        return null;
     }
 
     @Override

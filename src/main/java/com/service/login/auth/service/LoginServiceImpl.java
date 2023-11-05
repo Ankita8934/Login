@@ -21,7 +21,7 @@ public class LoginServiceImpl implements LoginService {
     public ResponseDTO<User> sinUp(SignUpCO signUpRequest) throws InvalidResponseException {
         ResponseDTO<User> responseDTO = new ResponseDTO<>();
         try {
-            Optional<User> optional = userRepository.findByEmail(signUpRequest.email);
+            Optional<User> optional = userRepository.findByEmail(signUpRequest.getEmail());
             if (optional.isPresent()) {
                 responseDTO.setFailureResponse("EMAIL_EXIST");
             } else {

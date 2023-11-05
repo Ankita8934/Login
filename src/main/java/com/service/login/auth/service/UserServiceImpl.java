@@ -17,13 +17,6 @@ public class UserServiceImpl implements UserService {
     LoginServiceImpl userService;
 
     @Override
-    public User findByUserNameAndPassword(String username, String password12) {
-        String password = new BCryptPasswordEncoder().encode(password12);
-        System.out.println(password);
-        return userRepository.findByPasswordAndEmail(password, username).orElse(null);
-    }
-
-    @Override
     public User findByEmail(String username) {
         Optional<User> optionalUser = userRepository.findByEmail(username);
         return optionalUser.orElse(null);

@@ -1,4 +1,5 @@
 package com.service.login.auth.jwt;
+
 import com.service.login.auth.domain.User;
 import com.service.login.auth.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,18 +19,10 @@ public class UserDetailsServiceImpl implements UserDetailsService {
     @Override
     @Transactional
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = null;
-        try {
-            user =  userRepository.findByUsername(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("" + username));
-
-        } catch (Throwable throwable) {
-            throwable.printStackTrace();
-        }
-        return new UserDetailsImpl(
-                user.getId(),
-                user.getEmail(),
-                user.getPassword());
+        User user = userRepository.findByEmail(username)
+                .orElseThrow(() -> new UsernameNotFoundException("USER_NOT_FOUND_WITH_USERNAME......" + username));
+        return UserDetailsImpl.build(user);
     }
+
 
 }
