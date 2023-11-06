@@ -32,12 +32,11 @@
 <div class="container mt-5">
     <div class="card" style="width: 600px; margin-left: 250px;">
         <h3 class="text-center mt-5">Log In As User</h3>
-        <form action="/login" method="post">
             <div class="container text-center mb-3">
-                <button type="submit" class="btn btn-primary">Login as a crm</button>
+                <a href="/login/auth?source=crm" class="btn btn-primary">Login as a crm</a>
             </div>
             <div class="container text-center mb-3">
-                <button type="submit" class="btn btn-primary">Login as a task</button>
+                <a href="/login/auth?source=task" class="btn btn-primary">Login as a task</a>
             </div>
             <div class="text-center mb-2">
                 <span> <a href="/oauth2/authorization/google">Sign Up Using Google</a></span>
@@ -48,7 +47,6 @@
             <%&#45;&#45;							As Instructor</a></span>&#45;&#45;%>
                         <%&#45;&#45;            </div>&#45;&#45;%>-->
             <div></div>
-        </form>
     </div>
 </div>
 </body>

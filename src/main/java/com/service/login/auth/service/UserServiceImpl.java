@@ -1,5 +1,6 @@
 package com.service.login.auth.service;
 import com.service.login.auth.domain.User;
+import com.service.login.auth.dto.TokenResponse;
 import com.service.login.auth.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -21,5 +22,12 @@ public class UserServiceImpl implements UserService {
         Optional<User> optionalUser = userRepository.findByEmail(username);
         return optionalUser.orElse(null);
     }
+
+    @Override
+    public User save(String username, String password) {
+        return null;
+    }
+
+
 
 }

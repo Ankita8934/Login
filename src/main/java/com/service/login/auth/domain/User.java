@@ -18,5 +18,6 @@ public class User {
     public Long id;
     public String email;
     public String password;
-
+    @Column(length = 10000)
+    public String access_token;
 }
