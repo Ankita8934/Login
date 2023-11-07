@@ -1,9 +1,9 @@
 package com.service.login.auth.controller;
+
 import com.service.login.auth.co.LoginCO;
 import com.service.login.auth.co.SignUpCO;
 import com.service.login.auth.domain.User;
 import com.service.login.auth.dto.ResponseDTO;
-import com.service.login.auth.dto.TokenResponse;
 import com.service.login.auth.exception.InvalidResponseException;
 import com.service.login.auth.jwt.JwtTokenUtil;
 import com.service.login.auth.jwt.UserDetailsServiceImpl;
@@ -11,9 +11,9 @@ import com.service.login.auth.repo.UserRepository;
 import com.service.login.auth.service.LoginService;
 import com.service.login.auth.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -25,7 +25,9 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.io.IOException;
 
 @Controller
 public class LoginController {
@@ -50,7 +52,6 @@ public class LoginController {
     @Autowired
     UserDetailsServiceImpl userDetailsService;
 
-
     @RequestMapping("/")
     public String home() {
         return "source";
@@ -61,8 +62,8 @@ public class LoginController {
         String name = OAuth2User.getAttribute("name");
         String email = OAuth2User.getAttribute("email");
         User user = userService.findByEmail(email);
-        if(user == null){
-            userService.save(email,name);
+        if (user == null) {
+            userService.save(email, name);
         }
         model.addAttribute("name", name);
         model.addAttribute("email", email);
@@ -72,9 +73,12 @@ public class LoginController {
     @GetMapping("/login/auth")
     public String login(HttpServletRequest request, Model m) {
         String source = request.getParameter("source");
-        System.out.println("+++source:--"+source);
-       m = addAttributes(m, source);
-        return "login"; // Replace with the actual API response
+        String message = request.getParameter("error");
+        m = addAttributes(m, source);
+        if (message!=null && message.equals("true")) {
+            m.addAttribute("message", "Sorry, we were not able to find a user with that username and password");
+        }
+        return "login";
     }
 
     @ModelAttribute
@@ -84,55 +88,38 @@ public class LoginController {
     }
 
     @RequestMapping(path = "/auth", method = RequestMethod.POST)
-    public ResponseEntity<?> authenticateUser(LoginCO loginRequest, HttpServletRequest request) throws InvalidResponseException {
-        String source = request.getParameter("source");
-        System.out.println("+++source:--"+source);
+    public void authenticateUser(LoginCO loginRequest, String source, HttpServletRequest request, HttpServletResponse response) throws InvalidResponseException, IOException {
         ResponseDTO responseDTO = new ResponseDTO();
-//        String jwtToken = null;
-//
-//        if (!loginRequest.getUsername().isEmpty()) {
-//            User user = userService.findByEmail(loginRequest.getUsername());
-//            if (user != null) {
-//                jwtToken = jwtUtils.generateTokenForUser(user.getEmail(), user.getPassword());
-//            } else {
-//                SignUpCO signUpRequest = new SignUpCO();
-//                signUpRequest.setEmail(loginRequest.getUsername());
-//                signUpRequest.setPassword(loginRequest.getPassword());
-//                loginService.sinUp(signUpRequest);
-//                user = userService.findByEmail(loginRequest.getUsername());
-//                jwtToken = jwtUtils.generateTokenForUser(user.getEmail(), user.getPassword());
-//            }
-//            TokenResponse tokenResponse = new TokenResponse();
-//            tokenResponse.setToken(jwtToken);
-//            return ResponseEntity.ok(tokenResponse);
-//        }
-//        else {
-//            responseDTO.setFailureResponse("INVALID_USER");
-//            return ResponseEntity.ok(responseDTO);
-//        }
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
-
-        SecurityContextHolder.getContext().setAuthentication(authentication);
-        User user = userService.findByEmail(loginRequest.getUsername());
-        if (user == null) {
-            responseDTO.setFailureResponse("USER_NOT_EXIST");
-            return ResponseEntity.ok(responseDTO);
-        } else {
-            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-            if (!encoder.matches(loginRequest.getPassword(), user.getPassword())) {
-                responseDTO.setFailureResponse("INVALID_CREDENTIALS");
-                return ResponseEntity.ok(responseDTO);
+        String targetUrl = "";
+        String failureUrl = "/login/auth";
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+            User user = userService.findByEmail(loginRequest.getUsername());
+            if (user == null) {
+                failureUrl += "?source="+ source+"&?error="+true;
+                response.sendRedirect(request.getContextPath() + failureUrl);
             } else {
-                String jwtToken = jwtUtils.generateTokenForUser(user.getEmail(), user.getPassword());
-                TokenResponse tokenResponse = new TokenResponse();
-                tokenResponse.setToken(jwtToken);
-                user.setAccess_token(jwtToken);
-                userRepository.save(user);
-                return ResponseEntity.ok(tokenResponse);
+                BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+                if (!encoder.matches(loginRequest.getPassword(), user.getPassword())) {
+                    responseDTO.setFailureResponse("INVALID_CREDENTIALS");
+                    failureUrl += "?source="+ source+"&?error="+true;
+                    response.sendRedirect(request.getContextPath() + failureUrl);
+                } else {
+                    String jwtToken = userService.generateJwtToken(user);
+                    if (source != null && (source.equals("crm") || source.equals("task"))) {
+                        targetUrl = userService.createdTargetedUrl(source, loginRequest.getUsername(), request.getScheme());
+                        response.sendRedirect(targetUrl);
+                    }
+                }
             }
+        } catch(BadCredentialsException e) {
+            failureUrl += "?source="+ source+"&error="+true;
+            response.sendRedirect(request.getContextPath() + failureUrl);
         }
     }
+
 
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignUpCO signUpRequest) throws InvalidResponseException {
@@ -145,5 +132,37 @@ public class LoginController {
         }
         responseDTO = loginService.sinUp(signUpRequest);
         return ResponseEntity.ok(responseDTO);
+    }
+
+    public void loginViaGoogle(String source, HttpServletRequest request) {
+//        if (resp.status.toString() == '200') {
+//            String email = resp.body.email;
+//            User employee = User.findByEmail(email);
+//            Boolean register = (employee == null) ? true : false;
+//            employee = userService.upsert(resp.body);
+//            if (employee instanceof User) {
+//                if (!employee.isActive) {
+//                }
+//                if (!employee.enabled) {
+//                }
+//                authenticationManager.authenticate(
+//                        new UsernamePasswordAuthenticationToken(employee.getEmail(), employee.getPassword()));
+//                userService.generateJwtToken(employee);
+//                if (source != null && (source.equals("crm") || source.equals("task"))) {
+//                    userService.createdTargetedUrl(source, employee.getEmail(), request.getScheme());
+//                } else {
+//                    if (register) {
+//                        flash.message = 'register'
+//                    }
+//                    render request.scheme + ":" + AppConstant.APP_PARENT_URL
+//                }
+//            } else {
+//                render "Login failed! " + employee
+//            }
+//            return
+//        } else {
+//            render "Login failed! Invalid auth token!"
+//            return
+//        }
     }
 }

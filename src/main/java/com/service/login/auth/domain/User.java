@@ -19,5 +19,9 @@ public class User {
     public String email;
     public String password;
     @Column(length = 10000)
-    public String access_token;
+    public String accessToken;
+    public String locale_code = "en_US";
+    public String uniqueId;
+    public Boolean isActive = false;
+    public boolean enabled = true;
 }

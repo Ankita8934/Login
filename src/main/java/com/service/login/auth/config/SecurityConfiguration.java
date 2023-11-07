@@ -54,16 +54,21 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         http.cors().and().csrf().disable()
                 .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-                .authorizeRequests()
-                .antMatchers("/").permitAll()
-                .antMatchers("/login/auth").permitAll()
-                .antMatchers("/auth").permitAll()
-                .antMatchers("/signup").permitAll()
-                .antMatchers("/oauth2/code/google").permitAll()
-                .anyRequest().authenticated().and().exceptionHandling().and().sessionManagement()
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS);
-        http.addFilterBefore(authenticationJwtTokenFilter(), UsernamePasswordAuthenticationFilter.class);
-
+                .authorizeRequests(authorizeRequest ->
+                                authorizeRequest
+                                .antMatchers("/").permitAll()
+                                .antMatchers("/login/auth").permitAll()
+                                .antMatchers("/auth").permitAll()
+                                .antMatchers("/signup").permitAll()
+                                .antMatchers("/oauth2/code/google").permitAll()
+//                                .anyRequest().authenticated().and().exceptionHandling().and().sessionManagement()
+//                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+                .oauth2Login(oauth2Login ->
+                        oauth2Login
+                                .loginPage("/login") // Specify the custom login page
+                                .defaultSuccessUrl("/oauth2/code/google", true) // Specify the custom success URL
+                );
     }
 
 }

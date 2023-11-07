@@ -48,7 +48,10 @@
                                                               placeholder="Enter Password" name="password" required/>
             </div>
             <div class="text-center">
-                <p class="text-danger" th:value="${variable}"></p>
+                <input type="hidden" name="source" th:value="${variable}" />
+            </div>
+            <div class="text-center">
+                <p th:value="${message}" id="errorMessage" style="color: red;font-size: 12px;font-style: italic;"></p>
             </div>
             <div class="container text-center mb-3">
                 <button type="submit" class="btn btn-primary">Login</button>
@@ -67,3 +70,10 @@
 </div>
 </body>
 </html>
+<script>
+    var errorField = document.getElementById('errorMessage');
+    let errorMessage = errorField.getAttribute("value")
+    if (errorMessage !=null && errorMessage !== "") {
+        errorField.textContent = errorMessage
+    }
+</script>

@@ -5,7 +5,13 @@ import com.service.login.auth.dto.TokenResponse;
 
 public interface UserService {
 
-   User findByEmail(String username);
- User save(String username,String password);
+    User findByEmail(String username);
 
+    User save(String username, String password);
+
+    String createdTargetedUrl(String source, String username, String scheme);
+
+    String generateJwtToken(User employee);
+
+//    User upsert();
 }
