@@ -7,4 +7,5 @@ public class LoginCO {
 
     String username;
     String password;
+    String source;
 }

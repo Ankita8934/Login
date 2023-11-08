@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 import java.io.IOException;
 
@@ -57,23 +58,49 @@ public class LoginController {
         return "source";
     }
 
+    @GetMapping("/login")
+    public String login() {
+        return "login"; // Create a login page
+    }
+
     @GetMapping("/oauth2/code/google")
-    public String home(Model model, @AuthenticationPrincipal OAuth2User OAuth2User) {
+    public void home(Model model, @AuthenticationPrincipal OAuth2User OAuth2User, HttpSession httpSession, HttpServletRequest request, HttpServletResponse response) throws IOException {
+        ResponseDTO responseDTO = new ResponseDTO();
+        String source = (String) httpSession.getAttribute("source");
+        String targetUrl = "";
+        String failureUrl = "/login/auth";
         String name = OAuth2User.getAttribute("name");
         String email = OAuth2User.getAttribute("email");
-        User user = userService.findByEmail(email);
-        if (user == null) {
-            userService.save(email, name);
-        }
+//        source=request.getParameter("source");
         model.addAttribute("name", name);
         model.addAttribute("email", email);
-        return "index";
+
+        User user =userService.findByEmail(OAuth2User.getAttribute("email"));
+        if(user==null){
+            failureUrl +="?source="+ source+"&error="+true;
+            response.sendRedirect(request.getContextPath() + failureUrl);
+        } else {
+//            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+//            if (!encoder.matches(user.getPassword(), user.getPassword())) {
+//                responseDTO.setFailureResponse("INVALID_CREDENTIALS");
+//                failureUrl += "?source=" + source + "&error=" + true;
+//                response.sendRedirect(request.getContextPath() + failureUrl);
+//            } else {
+                String jwtToken = userService.generateJwtToken(user);
+                if (source != null && (source.equals("crm") || source.equals("task"))) {
+                    targetUrl = userService.createdTargetedUrl(source, user.getEmail(), request.getScheme());
+                    response.sendRedirect(targetUrl);
+                }
+//            }
+
+        }
     }
 
     @GetMapping("/login/auth")
-    public String login(HttpServletRequest request, Model m) {
+    public String login(HttpServletRequest request, Model m, HttpSession httpSession) {
         String source = request.getParameter("source");
         String message = request.getParameter("error");
+        httpSession.setAttribute("source", source);
         m = addAttributes(m, source);
         if (message!=null && message.equals("true")) {
             m.addAttribute("message", "Sorry, we were not able to find a user with that username and password");
@@ -93,27 +120,27 @@ public class LoginController {
         String targetUrl = "";
         String failureUrl = "/login/auth";
         try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+//            Authentication authentication = authenticationManager.authenticate(
+//                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword()));
+//            SecurityContextHolder.getContext().setAuthentication(authentication);
             User user = userService.findByEmail(loginRequest.getUsername());
             if (user == null) {
-                failureUrl += "?source="+ source+"&?error="+true;
+                failureUrl += "?source="+ source+"&error="+true;
                 response.sendRedirect(request.getContextPath() + failureUrl);
             } else {
-                BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
-                if (!encoder.matches(loginRequest.getPassword(), user.getPassword())) {
-                    responseDTO.setFailureResponse("INVALID_CREDENTIALS");
-                    failureUrl += "?source="+ source+"&?error="+true;
-                    response.sendRedirect(request.getContextPath() + failureUrl);
-                } else {
-                    String jwtToken = userService.generateJwtToken(user);
-                    if (source != null && (source.equals("crm") || source.equals("task"))) {
-                        targetUrl = userService.createdTargetedUrl(source, loginRequest.getUsername(), request.getScheme());
-                        response.sendRedirect(targetUrl);
-                    }
+            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
+            if (!encoder.matches(loginRequest.getPassword(), user.getPassword())) {
+                responseDTO.setFailureResponse("INVALID_CREDENTIALS");
+                failureUrl += "?source=" + source + "&error=" + true;
+                response.sendRedirect(request.getContextPath() + failureUrl);
+            } else {
+                   String jwtToken = userService.generateJwtToken(user);
+                if (source != null && (source.equals("crm") || source.equals("task"))) {
+                    targetUrl = userService.createdTargetedUrl(source, loginRequest.getUsername(), request.getScheme());
+                    response.sendRedirect(targetUrl);
                 }
             }
+        }
         } catch(BadCredentialsException e) {
             failureUrl += "?source="+ source+"&error="+true;
             response.sendRedirect(request.getContextPath() + failureUrl);

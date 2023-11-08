@@ -15,6 +15,7 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @EnableWebSecurity
@@ -49,26 +50,51 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
         return new BCryptPasswordEncoder();
     }
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
-        http.cors().and().csrf().disable()
-                .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
-                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
-                .authorizeRequests(authorizeRequest ->
-                                authorizeRequest
-                                .antMatchers("/").permitAll()
-                                .antMatchers("/login/auth").permitAll()
-                                .antMatchers("/auth").permitAll()
-                                .antMatchers("/signup").permitAll()
-                                .antMatchers("/oauth2/code/google").permitAll()
-//                                .anyRequest().authenticated().and().exceptionHandling().and().sessionManagement()
-//                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-                .oauth2Login(oauth2Login ->
-                        oauth2Login
-                                .loginPage("/login") // Specify the custom login page
-                                .defaultSuccessUrl("/oauth2/code/google", true) // Specify the custom success URL
-                );
-    }
+//    @Override
+//    protected void configure(HttpSecurity http) throws Exception {
+//        http.cors().and().csrf().disable()
+//                .exceptionHandling().authenticationEntryPoint(unauthorizedHandler).and()
+//                .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS).and()
+//                .authorizeRequests(authorizeRequest ->
+//                                authorizeRequest
+//                                .antMatchers("/").permitAll()
+//                                .antMatchers("/login/auth").permitAll()
+//                                .antMatchers("/auth").permitAll()
+//                                .antMatchers("/signup").permitAll()
+////                                .antMatchers("/oauth2/code/google").permitAll()
+////                                .anyRequest().authenticated().and().exceptionHandling().and().sessionManagement()
+////                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+//                ) .oauth2Login(oauth2Login ->
+//                oauth2Login
+//                        .loginPage("/login") // Specify the custom login page
+//                        .defaultSuccessUrl("/oauth2/code/google", true) // Specify the custom success URL
+//        )
+//                .logout(logout -> logout
+//                        .logoutSuccessUrl("/") // Specify the logout success URL
+//                        .clearAuthentication(true) // Clear the authentication after logout
+//                );
+//    }
+        @Override
+        public void configure(HttpSecurity http) throws Exception {
+            http.cors().and().csrf().disable()
+                    .authorizeRequests(authorizeRequests ->
+                            authorizeRequests
+                                        .antMatchers("/").permitAll()
+                                        .antMatchers("/login/auth").permitAll()
+                                        .antMatchers("/auth").permitAll()
+                                        .antMatchers("/signup").permitAll()
+                                    .antMatchers("/oauth2/code/google").permitAll()// Allow access to the home page without authentication
+                                    .anyRequest().authenticated()
+                    )
+                    .oauth2Login(oauth2Login ->
+                            oauth2Login
+                                    .loginPage("/login") // Specify the custom login page
+                                    .defaultSuccessUrl("/oauth2/code/google", true) // Specify the custom success URL
+                    )
+                    .logout(logout -> logout
+                            .logoutSuccessUrl("/") // Specify the logout success URL
+                            .clearAuthentication(true) // Clear the authentication after logout
+                    );
+        }
 
 }
