@@ -24,4 +24,11 @@ public class User {
     public String uniqueId;
     public Boolean isActive = false;
     public boolean enabled = true;
-}
+    public boolean accountLocked = true;
+    public Boolean isEditable = true;
+    public Boolean acceptTOS = false;
+    private String ipAddress;
+    @ManyToOne
+    private Branch branch;
+    }
+
