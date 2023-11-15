@@ -1,4 +1,5 @@
 package com.service.login.auth.domain;
+import com.service.login.auth.enums.RegistrationType;
 import lombok.Data;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
@@ -30,5 +31,20 @@ public class User {
     private String ipAddress;
     @ManyToOne
     private Branch branch;
+    private String mobile;
+
+
+
+    public void setSource(RegistrationType registrationType) {
     }
+
+
+    public Company getCompany() {
+      return  branch.getCompany();
+    }
+
+    public User save(User employee) {
+        return employee;
+    }
+}
 

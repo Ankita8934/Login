@@ -2,9 +2,7 @@ package com.service.login.auth.controller;
 
 import com.service.login.auth.co.LoginCO;
 import com.service.login.auth.co.SignUpCO;
-import com.service.login.auth.domain.CompanyDomain;
-import com.service.login.auth.domain.Role;
-import com.service.login.auth.domain.User;
+import com.service.login.auth.domain.*;
 import com.service.login.auth.dto.ResponseDTO;
 import com.service.login.auth.enums.RegistrationType;
 import com.service.login.auth.exception.InvalidResponseException;
@@ -15,6 +13,7 @@ import com.service.login.auth.repo.FreeEmailProviderRepository;
 import com.service.login.auth.repo.UserRepository;
 import com.service.login.auth.service.LoginService;
 import com.service.login.auth.service.UserService;
+import com.service.login.auth.utils.StrUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,6 +33,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.logging.Logger;
 
 @Controller
 public class LoginController {
@@ -262,7 +262,7 @@ public class LoginController {
         }
     }
 
-    void registerEmployeeAndCompany(String companyName, OAuth2User OAuth2User, String source, HttpServletRequest request) {
+    void registerEmployeeAndCompany(String companyName, OAuth2User OAuth2User, String source, HttpServletRequest request, Map params) {
         String companyType = "Regular";
         String ipAddress = request.getRemoteAddr();
 
@@ -281,16 +281,140 @@ public class LoginController {
             employee.isEditable = true;
             employee.isActive = true;
             employee.setIpAddress(ipAddress);
-            if (companyType == "Individual") {
-                createEmployee(employee, "employee", source, Role.externalVacationEmployeeRole.authority, Role.externalPayrollEmployeeRole.authority, Role.externalExpenseEmployeeRole.authority, Role.externalInvoiceEmployeeRole.authority, Role.externalRecruitEmployeeRole.authority, Role.externalLivechatEmployeeRole.authority, Role.externalCrmEmployeeRole.authority, Role.externalMyshopEmployeeRole.authority, Role.externalEsignatureEmployeeRole.authority, Role.externalMypaymentsEmployeeRole.authority, Role.externalTaskEmployeeRole.authority, Role.externalHelpdeskEmployeeRole.authority, Role.externalAccountingEmployeeRole.authority, Role.externalSmartleadsEmployeeRole.authority, Role.externalTaxesEmployeeRole.authority, Role.externalMailerEmployeeRole.authority, params.registrationType as RegistrationType)
+
+            if ("Individual".equals(companyType)) {
+                createEmployee(employee, "employee", source, params != null ? params : Map.of(),
+                        Role.EXTERNAL_VACATION_EMPLOYEE, Role.EXTERNAL_PAYROLL_EMPLOYEE,
+                        Role.EXTERNAL_EXPENSE_EMPLOYEE, Role.EXTERNAL_INVOICE_EMPLOYEE,
+                        Role.EXTERNAL_RECRUIT_EMPLOYEE, Role.EXTERNAL_LIVECHAT_EMPLOYEE,
+                        Role.EXTERNAL_CRM_EMPLOYEE, Role.EXTERNAL_MYSHOP_EMPLOYEE,
+                        Role.EXTERNAL_ESIGNATURE_EMPLOYEE, Role.EXTERNAL_MYPAYMENTS_EMPLOYEE,
+                        Role.EXTERNAL_TASK_EMPLOYEE, Role.EXTERNAL_HELPDESK_EMPLOYEE,
+                        Role.EXTERNAL_ACCOUNTING_EMPLOYEE, Role.EXTERNAL_SMARTLEADS_EMPLOYEE,
+                        Role.EXTERNAL_TAXES_EMPLOYEE, Role.EXTERNAL_MAILER_EMPLOYEE,
+                        registrationType);
             } else {
-                createEmployee(employee, "employee", source, params.emailSubjectAndBody ? params.emailSubjectAndBody : [:], "ROLE_VACATION_COMPANY_BRANCH_EMPLOYEE", "ROLE_PAYROLL_COMPANY_BRANCH_EMPLOYEE", "ROLE_EXPENSE_COMPANY_BRANCH_EMPLOYEE", "ROLE_INVOICE_COMPANY_BRANCH_EMPLOYEE", "ROLE_RECRUIT_USER", "ROLE_LIVECHAT_COMPANY_BRANCH_EMPLOYEE", "ROLE_CRM_COMPANY_BRANCH_EMPLOYEE", "ROLE_MYSHOP_COMPANY_BRANCH_EMPLOYEE", "ROLE_ESIGNATURE_COMPANY_BRANCH_EMPLOYEE", "ROLE_MYPAYMENTS_COMPANY_BRANCH_EMPLOYEE", "ROLE_TASK_COMPANY_BRANCH_EMPLOYEE", "ROLE_HELPDESK_COMPANY_BRANCH_EMPLOYEE", "ROLE_ACCOUNTING_COMPANY_BRANCH_EMPLOYEE", "ROLE_SMARTLEADS_COMPANY_BRANCH_EMPLOYEE", "ROLE_TAXES_COMPANY_BRANCH_EMPLOYEE", "ROLE_MAILER_COMPANY_BRANCH_EMPLOYEE", "ROLE_AI_COMPANY_BRANCH_EMPLOYEE", params.registrationType as RegistrationType)
+                createEmployee(employee, "employee", source, params != null ? params : Map.of(),
+                        "ROLE_VACATION_COMPANY_BRANCH_EMPLOYEE", "ROLE_PAYROLL_COMPANY_BRANCH_EMPLOYEE",
+                        "ROLE_EXPENSE_COMPANY_BRANCH_EMPLOYEE", "ROLE_INVOICE_COMPANY_BRANCH_EMPLOYEE",
+                        "ROLE_RECRUIT_USER", "ROLE_LIVECHAT_COMPANY_BRANCH_EMPLOYEE", "ROLE_CRM_COMPANY_BRANCH_EMPLOYEE",
+                        "ROLE_MYSHOP_COMPANY_BRANCH_EMPLOYEE", "ROLE_ESIGNATURE_COMPANY_BRANCH_EMPLOYEE",
+                        "ROLE_MYPAYMENTS_COMPANY_BRANCH_EMPLOYEE", "ROLE_TASK_COMPANY_BRANCH_EMPLOYEE",
+                        "ROLE_HELPDESK_COMPANY_BRANCH_EMPLOYEE", "ROLE_ACCOUNTING_COMPANY_BRANCH_EMPLOYEE",
+                        "ROLE_SMARTLEADS_COMPANY_BRANCH_EMPLOYEE", "ROLE_TAXES_COMPANY_BRANCH_EMPLOYEE",
+                        "ROLE_MAILER_COMPANY_BRANCH_EMPLOYEE", "ROLE_AI_COMPANY_BRANCH_EMPLOYEE",
+                        registrationType);
             }
         } else {
-            params.company = [name: companyName, domainName: companyName, companyType: companyType]
-            params.branch = [name: "Head Quarters"]
+            Map<String, Object> companyMap = Map.of("name", companyName, "domainName", companyName, "companyType", companyType);
+            Map<String, Object> branchMap = Map.of("name", "Head Quarters");
 
-            companyService.createCompanyBranchAndEmployee(params, AppConstant.COMPANY_ADMIN, params.inviteFlag ? true : false);
+            params.put("company", companyMap);
+            params.put("branch", branchMap);
+
+            companyService.createCompanyBranchAndEmployee(params, AppConstant.COMPANY_ADMIN, params.containsKey("inviteFlag") ? (boolean) params.get("inviteFlag") : false);
+        }
+
+        }
+    }
+
+    public User createEmployee(User employee, String peopleRoleGroup, String source, Map<String, Object> emailContent,
+                                   String vacationRole, String payrollRole, String expenseRole, String invoiceRole, String recruitRole,
+                                   String livechatRole, String crmRole, String myshopRole, String esignatureRole, String mypaymentsRole,
+                                   String taskRole, String helpdeskRole, String accountingRole, String smartleadsRole, String taxesRole,
+                                   String mailerRole, String aiRole, RegistrationType registrationType) {
+
+        employee.setAcceptTOS(true);
+        employee.setSource(registrationType);
+
+        if (registrationType.equals(RegistrationType.Mobile)) {
+            employee.setMobile(employee.getEmail());
+        }
+
+        employee.setPassword(employee.getPassword() != null ? employee.getPassword() : StrUtil.randomPassword());
+        String tempPassword = employee.getPassword();
+
+        employee = saveEmployeeInfo(employee);
+
+        RoleGroup peopleRole = userRepository.findByName(peopleRoleGroup);
+        Role vacationRoleObj = userRepository.findByAuthority(vacationRole);
+        Role payrollRoleObj = userRepository.findByAuthority(payrollRole);
+        Role expenseRoleObj = userRepository.findByAuthority(expenseRole);
+        Role invoiceRoleObj = userRepository.findByAuthority(invoiceRole);
+        Role recruitRoleObj = userRepository.findByAuthority(recruitRole);
+        Role livechatRoleObj = userRepository.findByAuthority(livechatRole);
+        Role crmRoleObj = userRepository.findByAuthority(crmRole);
+        Role myshopRoleObj = userRepository.findByAuthority(myshopRole);
+        Role esignatureRoleObj = userRepository.findByAuthority(esignatureRole);
+        Role mypaymentsRoleObj = userRepository.findByAuthority(mypaymentsRole);
+        Role taskRoleObj = userRepository.findByAuthority(taskRole);
+        Role helpdeskRoleObj = userRepository.findByAuthority(helpdeskRole);
+        Role accountingRoleObj = userRepository.findByAuthority(accountingRole);
+        Role smartleadsRoleObj = userRepository.findByAuthority(smartleadsRole);
+        Role taxesRoleObj = userRepository.findByAuthority(taxesRole);
+        Role mailerRoleObj = userRepository.findByAuthority(mailerRole);
+        Role aiRoleObj = userRepository.findByAuthority(aiRole);
+
+
+
+        saveEmployeeRoleGroup(employee, peopleRole, vacationRoleObj, payrollRoleObj,expenseRoleObj,invoiceRoleObj,recruitRoleObj,livechatRoleObj,crmRoleObj,myshopRoleObj,esignatureRoleObj,mypaymentsRoleObj,taskRoleObj,helpdeskRoleObj,accountingRoleObj,smartleadsRoleObj,taxesRoleObj,mailerRoleObj,aiRoleObj);
+
+        if (registrationType.equals(RegistrationType.EMAIL)) {
+            sendMailService.sendUserVerificationEmail(employee, tempPassword, source, emailContent);
+            gcmService.sendVerificationNotification(employee);
+        } else if (registrationType.equals(RegistrationType.MOBILE)) {
+            sendAndSaveOtp(employee.getMobile(), employee.getUniqueId());
+        }
+
+        return employee;
+    }
+
+    public User saveEmployeeInfo(User employeeInstance) {
+        try {
+            userService.save(employeeInstance);
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("Failed to save employee information", e);
+        }
+
+        return employeeInstance;
+    }
+
+    public void saveEmployeeRoleGroup(User employee, RoleGroup peopleRoleGroup, Role vacation, Role payroll, Role imprest, Role invoice, Role hire, Role livechat, Role crm, Role myshop, Role esignature, Role mypayments, Role task, Role helpdesk, Role accounting, Role smartleads, Role taxes, Role mailer, Role ai) {
+        try {
+            User employeeRole = EmployeeRole.findByEmployee(employee);
+            Long loanRole;
+            Long contractorRole;
+            if (employee.getCompany().) {
+                loanRole = Role.getExternalLoanEmployee();
+                contractorRole = Role.getExternalContractorEmployee();
+            } else {
+                // Company Admin registration and
+                // New user registration whose domain already exists comes here
+                loanRole = Role.getLoanEmployee();
+                contractorRole = Role.getContractorEmployee();
+            }
+
+            if (employeeRole == null) {
+                employeeRole = new User(employee, peopleRoleGroup, imprest, invoice, payroll, hire, vacation, loanRole, contractorRole, livechat, crm, myshop, esignature, mypayments, task, helpdesk, accounting, smartleads, taxes, mailer, ai);
+                employeeRole.save(employee);
+            }
+
+            if (!employeeRole.validate()) {
+                log.error(employeeRole.retrieveErrors());
+                throw new ValidationException("Employee Role Group is not valid", employeeRole.errors);
+            }
+
+            if (employeeRole.save(flush: true, failOnError: true)) {
+                EmployeeRole.executeUpdate("Update EmployeeRole employeeRole set employeeRole.roleGroup = ?, employeeRole.vacation_role = ?, employeeRole.payroll_role = ?, employeeRole.expense_role = ?, employeeRole.invoice_role = ?, employeeRole.recruit_role = ?, employeeRole.loan_role = ?, employeeRole.contractor_role = ?, employeeRole.livechat_role = ?, employeeRole.crm_role = ?, employeeRole.myshop_role = ?, employeeRole.esignature_role = ?, employeeRole.mypayments_role = ?, employeeRole.task_role = ?, employeeRole.helpdesk_role = ?, employeeRole.accounting_role = ?, employeeRole.smartleads_role = ?, employeeRole.taxes_role = ?, employeeRole.mailer_role = ?, employeeRole.ai_role = ? where employeeRole.employee = ?", [peopleRoleGroup, vacation, payroll, imprest, invoice, hire, loanRole, contractorRole, livechat, crm, myshop, esignature, mypayments, task, helpdesk, accounting, smartleads, taxes, mailer, ai, employee]);
+                System.out.println("Saved employee role.. ");
+            } else {
+                employeeRole.errors.allErrors.each {
+                    System.out.println(it);
+                }
+            }
+        } catch (Exception e) {
+            System.out.println(e);
         }
     }
 

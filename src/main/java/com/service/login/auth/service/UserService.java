@@ -13,6 +13,7 @@ public interface UserService {
 
     String generateJwtToken(User employee);
 
+    void save(User employeeInstance);
 
 
 //    User upsert();

@@ -4,16 +4,25 @@ import lombok.Data;
 
 import javax.persistence.*;
 import java.io.Serializable;
+import java.net.URI;
 
 @Entity
 @Data
 public class Role implements Serializable {
 
+
     private static final long serialVersionUID = 1L;
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+
+
+    public String getAuthority() {
+        return authority;
+    }
 
     @Column(nullable = false, unique = true)
     private String authority;
@@ -35,8 +44,12 @@ public class Role implements Serializable {
 
     private static final Long PAYROLL_ADMIN = 14L;
     private static final Long PAYROLL_COMPANY_ADMIN = 15L;
+
+
+
     private static final Long PAYROLL_BRANCH_ADMIN = 16L;
     private static final Long PAYROLL_EMPLOYEE = 17L;
+
 
     private static final Long INVOICE_ADMIN = 18L;
     private static final Long INVOICE_COMPANY_ADMIN = 19L;
@@ -76,6 +89,8 @@ public class Role implements Serializable {
     private static final Long ESIGNATURE_ADMIN = 316L;
     private static final Long ESIGNATURE_COMPANY_ADMIN = 317L;
     private static final Long ESIGNATURE_BRANCH_ADMIN = 318L;
+
+
     private static final Long ESIGNATURE_EMPLOYEE = 319L;
 
     private static final Long MYPAYMENTS_ADMIN = 325L;
@@ -136,8 +151,104 @@ public class Role implements Serializable {
     private static final Long AI_COMPANY_ADMIN = 362L;
     private static final Long AI_BRANCH_ADMIN = 363L;
     private static final Long AI_EMPLOYEE = 364L;
+
+
+
     private static final Long EXTERNAL_AI_EMPLOYEE = 365L;
 
 
     private static final Long EXTERNAL_VALUE = 0L;
+
+    public static Long getExternalExpenseEmployee() {
+        return EXTERNAL_EXPENSE_EMPLOYEE;
+    }
+
+    public static Long getExternalRecruitEmployee() {
+        return EXTERNAL_RECRUIT_EMPLOYEE;
+    }
+
+    public static Long getVacationEmployee() {
+        return VACATION_EMPLOYEE;
+    }
+    public static Long getExpenseEmployee() {
+        return EXPENSE_EMPLOYEE;
+    }
+
+    public static Long getPayrollEmployee() {
+        return PAYROLL_EMPLOYEE;
+    }
+
+    public static Long getInvoiceEmployee() {
+        return INVOICE_EMPLOYEE;
+    }
+
+    public static Long getRecruitEmployee() {
+        return RECRUIT_EMPLOYEE;
+    }
+
+    public static Long getLoanEmployee() {
+        return LOAN_EMPLOYEE;
+    }
+
+    public static Long getContractorEmployee() {
+        return CONTRACTOR_EMPLOYEE;
+    }
+
+    public static Long getLivechatEmployee() {
+        return LIVECHAT_EMPLOYEE;
+    }
+
+    public static Long getCrmEmployee() {
+        return CRM_EMPLOYEE;
+    }
+
+    public static Long getMyshopEmployee() {
+        return MYSHOP_EMPLOYEE;
+    }
+
+    public static Long getEsignatureEmployee() {
+        return ESIGNATURE_EMPLOYEE;
+    }
+
+    public static Long getMypaymentsEmployee() {
+        return MYPAYMENTS_EMPLOYEE;
+    }
+
+    public static Long getTaskEmployee() {
+        return TASK_EMPLOYEE;
+    }
+
+    public static Long getHelpdeskEmployee() {
+        return HELPDESK_EMPLOYEE;
+    }
+
+    public static Long getAccountingEmployee() {
+        return ACCOUNTING_EMPLOYEE;
+    }
+
+    public static Long getSmartleadsEmployee() {
+        return SMARTLEADS_EMPLOYEE;
+    }
+
+    public static Long getTaxesEmployee() {
+        return TAXES_EMPLOYEE;
+    }
+
+    public static Long getMailerEmployee() {
+        return MAILER_EMPLOYEE;
+    }
+
+    public static Long getAiEmployee() {
+        return AI_EMPLOYEE;
+    }
+
+    public static Long getExternalLoanEmployee() {
+        return EXTERNAL_LOAN_EMPLOYEE;
+    }
+
+    public static Long getExternalContractorEmployee() {
+        return EXTERNAL_CONTRACTOR_EMPLOYEE;
+    }
 }
+
+
