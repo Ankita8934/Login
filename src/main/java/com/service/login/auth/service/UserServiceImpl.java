@@ -73,6 +73,11 @@ public class UserServiceImpl implements UserService {
         return jwtToken;
     }
 
+    @Override
+    public void save(User employeeInstance) {
+
+    }
+
 //    @Override
 //    public User upsert() {
 //        String email = body.email

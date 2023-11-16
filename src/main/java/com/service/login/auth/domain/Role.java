@@ -1,6 +1,8 @@
 package com.service.login.auth.domain;
 
+import com.service.login.auth.repo.RoleRepository;
 import lombok.Data;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import javax.persistence.*;
 import java.io.Serializable;
@@ -10,6 +12,8 @@ import java.net.URI;
 @Data
 public class Role implements Serializable {
 
+    @Autowired
+    RoleRepository roleRepository;
 
     private static final long serialVersionUID = 1L;
 
@@ -248,6 +252,22 @@ public class Role implements Serializable {
 
     public static Long getExternalContractorEmployee() {
         return EXTERNAL_CONTRACTOR_EMPLOYEE;
+    }
+
+    public static Long getExternalVacationEmployee() {
+        return EXTERNAL_VACATION_EMPLOYEE;
+    }
+
+    public static Long getExternalPayrollEmployee() {
+        return EXTERNAL_PAYROLL_EMPLOYEE;
+    }
+
+    public static Long getExternalLivechatEmployee() {
+        return EXTERNAL_LIVECHAT_EMPLOYEE;
+    }
+
+    public static Long getMyshopAdmin() {
+        return MYSHOP_ADMIN;
     }
 }
 

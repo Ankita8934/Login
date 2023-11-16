@@ -4,7 +4,7 @@ import lombok.Data;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import javax.persistence.*;
-
+import java.util.Map;
 
 
 @Entity
@@ -33,6 +33,16 @@ public class User {
     private Branch branch;
     private String mobile;
 
+    public User(User employee, RoleGroup peopleRoleGroup, Role imprest, Role invoice, Role payroll, Role hire, Role vacation, Long loanRole, Long contractorRole, Role livechat, Role crm, Role myshop, Role esignature, Role mypayments, Role task, Role helpdesk, Role accounting, Role smartleads, Role taxes, Role mailer, Role ai) {
+    }
+
+    public User() {
+
+    }
+
+    public User(Map<String, Object> employee) {
+
+    }
 
 
     public void setSource(RegistrationType registrationType) {
