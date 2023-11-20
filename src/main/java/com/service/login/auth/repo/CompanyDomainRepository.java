@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 public interface CompanyDomainRepository extends JpaRepository<CompanyDomain, Long> {
 
     CompanyDomain findByName(String name);
+    CompanyDomain save(String company);
+
 }

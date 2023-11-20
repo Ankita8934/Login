@@ -28,10 +28,20 @@ public class User {
     public boolean accountLocked = true;
     public Boolean isEditable = true;
     public Boolean acceptTOS = false;
+
+    public void setEditable(Boolean editable) {
+        isEditable = editable;
+    }
+
+    public void setActive(Boolean active) {
+        isActive = active;
+    }
+
     private String ipAddress;
     @ManyToOne
     private Branch branch;
     private String mobile;
+    private String source = RegistrationType.EMAIL;
 
     public User(User employee, RoleGroup peopleRoleGroup, Role imprest, Role invoice, Role payroll, Role hire, Role vacation, Long loanRole, Long contractorRole, Role livechat, Role crm, Role myshop, Role esignature, Role mypayments, Role task, Role helpdesk, Role accounting, Role smartleads, Role taxes, Role mailer, Role ai) {
     }
@@ -56,5 +66,7 @@ public class User {
     public User save(User employee) {
         return employee;
     }
+
+
 }
 

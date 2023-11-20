@@ -19,12 +19,21 @@ public class Company {
     List<Branch> branches;
 
     @OneToMany
-    List<CompanyDomain> companyDomain;
+   List<CompanyDomain> companyDomain;
 
-    @OneToMany
-    List<Country> registeredCountry;
+    @OneToOne
+     Country registeredCountry;
+
+    @ManyToOne
+    Branch branch;
+   private String name;
+    private String domainName;
 
     private String currency;
+
+    private Boolean isActive = true;
+
+    private Boolean isVerified = false;
 
     CompanyType companyType = CompanyType.Regular;
 
@@ -35,9 +44,7 @@ public class Company {
                 .orElse(null);
     }
 
-
-
-    Boolean getIsIndividual() {
+    public Boolean isIndividual() {
         return companyType == CompanyType.Individual;
     }
 }

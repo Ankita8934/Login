@@ -1,12 +1,24 @@
 package com.service.login.auth.domain;
 
+import lombok.Data;
+
+import javax.persistence.*;
 import java.io.Serializable;
 
+@Entity
+@Data
 public class EmployeeRole implements Serializable {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+    
     private static final long serialVersionUID = 1L;
 
-    private User employee;
-    private RoleGroup roleGroup;
+    @OneToOne
+     User employee;
+    @OneToOne
+    RoleGroup roleGroup;
     private Long vacation_role = Role.getVacationEmployee();
     private Long expense_role = Role.getExpenseEmployee();
     private Long payroll_role = Role.getPayrollEmployee();
@@ -27,13 +39,7 @@ public class EmployeeRole implements Serializable {
     private Long mailer_role = Role.getMailerEmployee();
     private Long ai_role = Role.getAiEmployee();
 
+
     public EmployeeRole(User employee, RoleGroup peopleRoleGroup, Role imprest, Role invoice, Role payroll, Role hire, Role vacation, Long loanRole, Long contractorRole, Role livechat, Role crm, Role myshop, Role esignature, Role mypayments, Role task, Role helpdesk, Role accounting, Role smartleads, Role taxes, Role mailer, Role ai) {
     }
-
-
-    public static User findByEmployee(User employee) {
-        return employee;
-    }
-
-
 }

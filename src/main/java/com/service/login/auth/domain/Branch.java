@@ -24,4 +24,8 @@ public class Branch {
     public boolean isHeadQuarter() {
         return isHeadQuarter;
     }
+
+    public void setHeadQuarter(Boolean headQuarter) {
+        isHeadQuarter = headQuarter;
+    }
 }

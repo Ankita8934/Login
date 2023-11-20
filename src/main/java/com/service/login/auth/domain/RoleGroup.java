@@ -2,13 +2,11 @@ package com.service.login.auth.domain;
 
 import lombok.Data;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.util.Date;
+import java.util.List;
 
-
+@Entity
 @Data
 public class RoleGroup {
     @Id
@@ -19,7 +17,8 @@ public class RoleGroup {
     private Date dateCreated;
     private Date lastUpdated;
     private int accessLevel = 1;
-    private Company company;
+    @OneToMany
+    List<Company> company;
     private static final long SUPER_ADMIN = 1L;
     private static final long PEOPLE_ADMIN = 2L;
     private static final long COMPANY_ADMIN = 3L;

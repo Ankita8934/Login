@@ -1,19 +1,14 @@
 package com.service.login.auth.domain;
-
-import com.service.login.auth.repo.RoleRepository;
 import lombok.Data;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import javax.persistence.*;
 import java.io.Serializable;
-import java.net.URI;
+
 
 @Entity
 @Data
 public class Role implements Serializable {
 
-    @Autowired
-    RoleRepository roleRepository;
+
 
     private static final long serialVersionUID = 1L;
 

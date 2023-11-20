@@ -15,6 +15,8 @@ public interface UserService {
 
     void save(User employeeInstance);
 
+    void saveData();
+
 
 //    User upsert();
 }

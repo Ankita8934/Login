@@ -5,6 +5,7 @@ import com.service.login.auth.co.LoginCO;
 import com.service.login.auth.co.SignUpCO;
 import com.service.login.auth.domain.*;
 import com.service.login.auth.dto.ResponseDTO;
+import com.service.login.auth.enums.CompanyType;
 import com.service.login.auth.enums.RegistrationType;
 import com.service.login.auth.exception.InvalidResponseException;
 import com.service.login.auth.jwt.JwtTokenUtil;
@@ -81,6 +82,10 @@ public class LoginController {
     @Autowired
     CountryRepository countryRepository;
 
+    @Autowired
+    EmployeeRoleRepository employeeRoleRepository;
+
+
     private RestTemplate restTemplate;
 
     private static final Logger logger = (Logger) LoggerFactory.getLogger(ApiServiceImpl.class);
@@ -97,8 +102,7 @@ public class LoginController {
     }
 
     @GetMapping("/oauth2/code/google")
-    public void home(Model model, @AuthenticationPrincipal OAuth2User OAuth2User, HttpSession httpSession, HttpServletRequest request, HttpServletResponse response) throws IOException {
-        ResponseDTO responseDTO = new ResponseDTO();
+    public void home(Model model, @AuthenticationPrincipal OAuth2User OAuth2User, HttpSession httpSession, HttpServletRequest request, HttpServletResponse response,Map<String, Object> params) throws IOException {
         String source = (String) httpSession.getAttribute("source");
         String targetUrl = "";
         String failureUrl = "/login/auth";
@@ -110,8 +114,19 @@ public class LoginController {
 
         User user = userService.findByEmail(OAuth2User.getAttribute("email"));
         if (user == null) {
+            if (OAuth2User != null) {
+                upsert(OAuth2User, source, request, params);
+                if (user != null) {
+                    if (!user.isActive) {
+                        model.addAttribute("message", "Sorry, your account is inactive. Please contact your company admin.");
+                    }
+                    if (!user.isEnabled()) {
+                        model.addAttribute("message", "Sorry, your account is disabled. Please contact your company admin.");
+                    }
+                }
+            }
             failureUrl += "?source=" + source + "&error=" + true;
-            response.sendRedirect(request.getContextPath() + failureUrl);
+            response.sendRedirect(request.getContextPath());
         } else {
 //            BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 //            if (!encoder.matches(user.getPassword(), user.getPassword())) {
@@ -194,47 +209,12 @@ public class LoginController {
         return ResponseEntity.ok(responseDTO);
     }
 
-    public void loginViaGoogle(String source, HttpServletRequest request) {
-//        if (resp.status.toString() == '200') {
-//            String email = resp.body.email;
-//            User employee = User.findByEmail(email);
-//            Boolean register = (employee == null) ? true : false;
-//            employee = userService.upsert(resp.body);
-//            if (employee instanceof User) {
-//                if (!employee.isActive) {
-//                }
-//                if (!employee.enabled) {
-//                }
-//                authenticationManager.authenticate(
-//                        new UsernamePasswordAuthenticationToken(employee.getEmail(), employee.getPassword()));
-//                userService.generateJwtToken(employee);
-//                if (source != null && (source.equals("crm") || source.equals("task"))) {
-//                    userService.createdTargetedUrl(source, employee.getEmail(), request.getScheme());
-//                } else {
-//                    if (register) {
-//                        flash.message = 'register'
-//                    }
-//                    render request.scheme + ":" + AppConstant.APP_PARENT_URL
-//                }
-//            } else {
-//                render "Login failed! " + employee
-//            }
-//            return
-//        } else {
-//            render "Login failed! Invalid auth token!"
-//            return
-//        }
 
-
-    }
-
-
-    public String loginViaGoogle(@AuthenticationPrincipal OAuth2User OAuth2User, @RequestParam("code") String code, @RequestParam(value = "source") String source, HttpServletRequest request, Model model, Map params) {
+    public String loginViaGoogle(@AuthenticationPrincipal OAuth2User OAuth2User, @RequestParam("code") String code, @RequestParam(value = "source") String source, HttpServletRequest request, Model model, Map<String, Object> params) {
 
         if (OAuth2User != null) {
             String email = OAuth2User.getAttribute("email");
             User user = userService.findByEmail(email);
-            boolean register = (user == null);
             upsert(OAuth2User, source, request, params);
             if (user != null) {
                 if (!user.isActive) {
@@ -245,30 +225,24 @@ public class LoginController {
                     model.addAttribute("message", "Sorry, your account is disabled. Please contact your company admin.");
                     return "errorMessage";
                 }
-
-
             }
-
-
         }
         return null;
-
     }
 
-    void upsert(OAuth2User OAuth2User, String source, HttpServletRequest request, Map params) {
+    void upsert(OAuth2User OAuth2User, String source, HttpServletRequest request, Map<String, Object> params) {
         String email = OAuth2User.getAttribute("email");
         User user = userService.findByEmail(email);
 
         if (user == null) {
             setupCompanyAndEmployee(OAuth2User, source, request);
-            user = userService.findByEmail(email);
         } else {
             if (user.isAccountLocked() || !user.isEditable || !user.acceptTOS) {
                 user.setAccountLocked(false);
                 user.setIsEditable(true);
                 user.setAcceptTOS(true);
             }
-//            saveEmployeeInfo(user);
+           saveEmployeeInfo(user);
         }
     }
 
@@ -277,7 +251,7 @@ public class LoginController {
         String email = OAuth2User.getAttribute("email");
         Map<String, Object> params = new HashMap<>();
 
-        String companyName = (email.split("@")[1]).split(".")[0].toLowerCase();
+        String companyName = (email.split("@")[1]).split("\\.")[0].toLowerCase();
         if (companyName != null) {
             Map<String, Object> employeeParams = new HashMap<>();
             employeeParams.put("username", OAuth2User.getAttribute("email"));
@@ -293,7 +267,8 @@ public class LoginController {
     }
 
 
-    void registerEmployeeAndCompany(String companyName, OAuth2User OAuth2User, HttpServletRequest request,Map params) {
+    void registerEmployeeAndCompany(String companyName, OAuth2User OAuth2User, HttpServletRequest request,Map<String, Object> params) {
+        Map<String, Object> employeeParams = (Map<String, Object>) params.get("source");
         String source = (String) params.get("source");
         String companyType = "Regular";
         String ipAddress = request.getRemoteAddr();
@@ -323,9 +298,9 @@ public class LoginController {
                         (roleRepository.findById(Role.getRecruitEmployee())).get().getAuthority(), (roleRepository.findById(Role.getExternalLivechatEmployee())).get().getAuthority(),
                         (roleRepository.findById(Role.getCrmEmployee())).get().getAuthority(), (roleRepository.findById(Role.getMyshopEmployee())).get().getAuthority(),
                         (roleRepository.findById(Role.getEsignatureEmployee())).get().getAuthority(), (roleRepository.findById(Role.getMypaymentsEmployee())).get().getAuthority(),
-                       ( roleRepository.findById(Role.getTaskEmployee())).get().getAuthority(), (roleRepository.findById(Role.getHelpdeskEmployee())).get().getAuthority(),
+                        ( roleRepository.findById(Role.getTaskEmployee())).get().getAuthority(), (roleRepository.findById(Role.getHelpdeskEmployee())).get().getAuthority(),
                         (roleRepository.findById(Role.getAccountingEmployee())).get().getAuthority(), (roleRepository.findById(Role.getSmartleadsEmployee())).get().getAuthority(),
-                        (roleRepository.findById(Role.getTaxesEmployee())).get().getAuthority(),(roleRepository.findById(Role.getMailerEmployee())).get().getAuthority(),(RegistrationType) params.get("registrationType"));
+                        (roleRepository.findById(Role.getTaxesEmployee())).get().getAuthority(),(roleRepository.findById(Role.getMailerEmployee())).get().getAuthority(),(roleRepository.findById(Role.getAiEmployee())).get().getAuthority(),(RegistrationType) params.get("registrationType"));
             } else {
                 createEmployee(employee, "employee",source,  new HashMap<>(),
                         "ROLE_VACATION_COMPANY_BRANCH_EMPLOYEE", "ROLE_PAYROLL_COMPANY_BRANCH_EMPLOYEE",
@@ -355,16 +330,22 @@ public class LoginController {
 
     }
 
-    private void createEmployee(User employee, String employee1, String source, Map<String, Object> emailSubjectAndBody, String authority, String authority1, String authority2, String authority3, String authority4, String authority5, String authority6, String authority7, String authority8, String authority9, String authority10, String authority11, String authority12, String authority13, String authority14, String authority15, RegistrationType registrationType) {
-    }
 
 
     private String createCompanyBranchAndEmployee(Map<String, Object> params, String roleGroup, boolean flagApi) {
-        String email = (String) params.get("employee.email");
+        Map<String, Object> employeeParams = (Map<String, Object>) params.get("employee");
+        String email = (String) employeeParams.get("email");
         User employee = userService.findByEmail(email);
 
         if (employee == null) {
             Company company = new Company();
+            Map<String,Object> companyMap= (Map<String, Object>) params.get("company");
+            String name=(String) companyMap.get("name");
+            company.setName(name);
+            String domainname=(String) companyMap.get("domainName");
+            company.setDomainName(domainname);
+            String companyType=(String) companyMap.get("companyType");
+            company.setCompanyType(CompanyType.valueOf(companyType));
             try {
                 Map<String, Object> countryResp = apiService.fetchCountry();
                 String countryName = (String) countryResp.get("name");
@@ -376,31 +357,32 @@ public class LoginController {
                     country = new Country(countryName, isoCode);
                     countryRepository.save(country);
                 }
-
-                company.setRegisteredCountry((List<Country>) country);
+                company.setRegisteredCountry(country);
                 company.setCurrency(currencyCode);
             } catch (Exception e) {
                 return "We are unable to trace your location. Please try again!";
             }
-
 //            if (!company.validate()) {
 //                // Handle validation errors or return validation errors
 //                return company.retrieveErrors();
 //            }
-//
-//            company.addToCompanyDomain(new CompanyDomain((String) params.get("company.domainName")));
-//
-//            Branch branch = new Branch((Map<String, Object>) params.get("branch"));
-//            branch.setHeadQuarter(true);
+            companyRepository.save(company);
+            CompanyDomain companyDomain = new CompanyDomain();
+            companyDomain.setName(company.getDomainName());
+            companyDomain.setCompany(company);
+            companyDomainRepository.save(companyDomain);
+
+
+            Branch branch1 = new Branch();
+            branch1.setHeadQuarter(true);
 
             employee = new User((Map<String, Object>) params.get("employee"));
             employee.setAcceptTOS(true);
-//            employee.setEditable(true);
-//            employee.setActive(true);
+            employee.setEditable(true);
+            employee.setActive(true);
             employee.setIpAddress(apiService.fetchIPAddress());
 
 
-            companyRepository.save(company);
 //            String emailDomain = StrUtil.domainFromEmail(employee.getEmail());
 //            if (emailDomain.toLowerCase().contains(AppConstant.restrictedDomains) &&
 //                    (params.get("employee.source") instanceof RegistrationType &&
@@ -429,7 +411,6 @@ public class LoginController {
             User finalEmployee = employee;
             apiService.executeAfterCommit(() -> updateBillingCompany(finalEmployee.getUniqueId()));
         } else {
-            // Handle the case when an employee with the same email already exists
             return "Email id is already used.";
         }
 
@@ -456,8 +437,8 @@ public class LoginController {
             employee.setMobile(employee.getEmail());
         }
 
-//        employee.setPassword(employee.getPassword() != null ? employee.getPassword() : StrUtil.randomPassword();
-//        String tempPassword = employee.getPassword();
+        employee.setPassword(employee.getPassword() != null ? employee.getPassword() : StrUtil.randomPassword(8));
+        String tempPassword = employee.getPassword();
 
         employee = saveEmployeeInfo(employee);
 
@@ -505,13 +486,14 @@ public class LoginController {
         return employeeInstance;
     }
 
+
     public void saveEmployeeRoleGroup(User employee, RoleGroup peopleRoleGroup, Role vacation, Role payroll, Role imprest, Role invoice, Role hire, Role livechat, Role crm, Role myshop, Role esignature, Role mypayments, Role task, Role helpdesk, Role accounting, Role smartleads, Role taxes, Role mailer, Role ai) {
         try {
-            User employeeRole = EmployeeRole.findByEmployee(employee);
+            EmployeeRole employeeRole = employeeRoleRepository.findByEmployee(employee);
             Long loanRole;
             Long contractorRole;
             Company company = employee.getCompany();
-            if (company != null && companyRepository.getIsIndividual()) {
+            if (employee.getCompany().isIndividual()) {
                 loanRole = Role.getExternalLoanEmployee();
                 contractorRole = Role.getExternalContractorEmployee();
             } else {
@@ -520,8 +502,8 @@ public class LoginController {
             }
 
             if (employeeRole == null) {
-                employeeRole = new User(employee, peopleRoleGroup, imprest, invoice, payroll, hire, vacation, loanRole, contractorRole, livechat, crm, myshop, esignature, mypayments, task, helpdesk, accounting, smartleads, taxes, mailer, ai);
-                employeeRole.save(employee);
+                employeeRole = new EmployeeRole(employee, peopleRoleGroup, imprest, invoice, payroll, hire, vacation, loanRole, contractorRole, livechat, crm, myshop, esignature, mypayments, task, helpdesk, accounting, smartleads, taxes, mailer, ai);
+                employeeRoleRepository.save(employee);
             }
 
         } catch (Exception e) {

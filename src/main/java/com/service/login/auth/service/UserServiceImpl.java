@@ -75,7 +75,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void save(User employeeInstance) {
-
+        userRepository.save(employeeInstance);
     }
 
 //    @Override
@@ -94,6 +94,11 @@ public class UserServiceImpl implements UserService {
 //            saveEmployeeInfo(employee)
 //        }
 //    }
+
+    @Override
+    public void saveData(){
+        User employee= new User();
+    }
 
 
 }

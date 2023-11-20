@@ -39,6 +39,15 @@ public class StrUtil {
         return builder.toString();
     }
 
-
+    public static String domainFromEmail(String email) {
+        if (email != null) {
+            String[] tokens = email.split("@");
+            if (tokens.length > 1) {
+                String domainToken = tokens[1].split("\\.")[0];
+                return domainToken.toLowerCase();
+            }
+        }
+        return null;
+    }
 
 }
