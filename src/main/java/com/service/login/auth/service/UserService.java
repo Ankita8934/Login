@@ -15,12 +15,4 @@ public interface UserService {
 
     String generateJwtToken(User employee);
 
-    void save(User employeeInstance);
-
-    void saveData();
-
-    User findAllByEmailInList( List<String> recipientEmailList);
-
-
-//    User upsert();
 }

@@ -74,37 +74,9 @@ public class UserServiceImpl implements UserService {
         return jwtToken;
     }
 
-    @Override
-    public void save(User employeeInstance) {
-        userRepository.save(employeeInstance);
-    }
 
-//    @Override
-//    public User upsert() {
-//        String email = body.email
-//        Employee employee = Employee.findByEmail(email)
-//        if (!employee) {
-//            setupCompanyAndEmployee(body)
-//            employee = Employee.findByEmail(email)
-//        } else {
-//            if (employee.accountLocked || !employee.isEditable || !employee.acceptTOS) {
-//                employee.accountLocked = false
-//                employee.isEditable = true
-//                employee.acceptTOS = true
-//            }
-//            saveEmployeeInfo(employee)
-//        }
-//    }
 
-    @Override
-    public void saveData(){
-        User employee= new User();
-    }
 
-    @Override
-    public User findAllByEmailInList(List<String> recipientEmailList) {
-        return null;
-    }
 
 
 }

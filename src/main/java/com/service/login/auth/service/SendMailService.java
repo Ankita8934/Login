@@ -1,17 +1,11 @@
 package com.service.login.auth.service;
 
 import com.service.login.auth.domain.User;
-import com.service.login.auth.enums.RegistrationType;
-import com.service.login.auth.exception.AppConstant;
-import com.service.login.auth.utils.StrUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @Service
