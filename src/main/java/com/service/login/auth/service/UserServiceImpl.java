@@ -10,6 +10,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Base64;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -98,6 +99,11 @@ public class UserServiceImpl implements UserService {
     @Override
     public void saveData(){
         User employee= new User();
+    }
+
+    @Override
+    public User findAllByEmailInList(List<String> recipientEmailList) {
+        return null;
     }
 
 

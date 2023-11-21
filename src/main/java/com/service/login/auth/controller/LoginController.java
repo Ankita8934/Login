@@ -268,20 +268,31 @@ public class LoginController {
 
 
     void registerEmployeeAndCompany(String companyName, OAuth2User OAuth2User, HttpServletRequest request,Map<String, Object> params) {
-        Map<String, Object> employeeParams = (Map<String, Object>) params.get("source");
+        Map<String, Object> employeeParams = (Map<String, Object>) params.get("employee");
         String source = (String) params.get("source");
-        String companyType = "Regular";
+        CompanyType companyType = CompanyType.Regular;
+
         String ipAddress = request.getRemoteAddr();
         // Check if company requested belongs to restricted domain group
         if (freeEmailProviderRepository.findDomainNameByIsActiveIsTrue().contains(companyName.toLowerCase())) {
             companyName = OAuth2User.getAttribute("email").toString().split("@")[0] + "_business";
-            companyType = "Individual";
+            companyType = CompanyType.Individual;
         }
 
         // Check if company domain already existed
         CompanyDomain companyDomain = companyDomainRepository.findByName(companyName);
         if (companyDomain != null) {
-            User employee = new User((Map<String, Object>) params.get("employee"));
+            Map<String, Object> employeeParam = (Map<String, Object>) params.get("employee");
+            String email = (String) employeeParam.get("email");
+            String username = (String) employeeParam.get("username");
+            String profilePicUrl = (String) employeeParam.get("profilePicUrl");
+            String fullName = (String) employeeParam.get("fullName");
+            User employee = new User();
+            employee.setEmail(email);
+            employee.setUsername(username);
+            employee.setProfilePicUrl(profilePicUrl);
+            employee.setFullName(fullName);
+            employee.setIsActive(true);
             employee.setBranch(companyDomain.getCompany().getHeadQuarterBranch());
             employee.acceptTOS = true;
             employee.isEditable = true;
@@ -314,10 +325,11 @@ public class LoginController {
             }
         } else {
             String finalCompanyName = companyName;
+            CompanyType finalCompanyType = companyType;
             Map<String, String> companyMap = new HashMap<String, String>() {{
                 put("name", finalCompanyName);
                 put("domainName", finalCompanyName);
-                put("companyType", finalCompanyName);
+                put("companyType", String.valueOf(finalCompanyType));
             }};
             Map<String, String> branchMap = new HashMap<String, String>() {{
                 put("uid", "Head Quarters");
@@ -381,7 +393,6 @@ public class LoginController {
             employee.setEditable(true);
             employee.setActive(true);
             employee.setIpAddress(apiService.fetchIPAddress());
-
 
 //            String emailDomain = StrUtil.domainFromEmail(employee.getEmail());
 //            if (emailDomain.toLowerCase().contains(AppConstant.restrictedDomains) &&

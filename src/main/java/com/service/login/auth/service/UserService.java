@@ -3,6 +3,8 @@ package com.service.login.auth.service;
 import com.service.login.auth.domain.User;
 import com.service.login.auth.dto.TokenResponse;
 
+import java.util.List;
+
 public interface UserService {
 
     User findByEmail(String username);
@@ -16,6 +18,8 @@ public interface UserService {
     void save(User employeeInstance);
 
     void saveData();
+
+    User findAllByEmailInList( List<String> recipientEmailList);
 
 
 //    User upsert();

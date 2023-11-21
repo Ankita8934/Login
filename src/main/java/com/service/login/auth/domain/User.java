@@ -4,6 +4,7 @@ import lombok.Data;
 import org.hibernate.annotations.DynamicInsert;
 import org.hibernate.annotations.DynamicUpdate;
 import javax.persistence.*;
+import java.util.List;
 import java.util.Map;
 
 
@@ -18,7 +19,9 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Long id;
     public String email;
+    public String username;
     public String password;
+    public String profilePicUrl;
     @Column(length = 10000)
     public String accessToken;
     public String locale_code = "en_US";
@@ -28,6 +31,11 @@ public class User {
     public boolean accountLocked = true;
     public Boolean isEditable = true;
     public Boolean acceptTOS = false;
+   public String firstName;
+   public String middleName;
+   public String lastName;
+
+
 
     public void setEditable(Boolean editable) {
         isEditable = editable;
@@ -42,6 +50,8 @@ public class User {
     private Branch branch;
     private String mobile;
     private String source = RegistrationType.EMAIL;
+
+
 
     public User(User employee, RoleGroup peopleRoleGroup, Role imprest, Role invoice, Role payroll, Role hire, Role vacation, Long loanRole, Long contractorRole, Role livechat, Role crm, Role myshop, Role esignature, Role mypayments, Role task, Role helpdesk, Role accounting, Role smartleads, Role taxes, Role mailer, Role ai) {
     }
@@ -67,6 +77,20 @@ public class User {
         return employee;
     }
 
+    public String setFullName(String name) {
+        if (name != null && name.contains(" ")) {
+            String[] nameList = name.split(" ");
+            firstName = nameList[0];
+            if (nameList.length == 2) {
+                lastName = nameList[1];
+            } else if (nameList.length > 2) {
+                middleName = nameList[1];
+                lastName = nameList[2];
+            }
+        } else {
+        }
+        return firstName = name;
 
+    }
 }
 

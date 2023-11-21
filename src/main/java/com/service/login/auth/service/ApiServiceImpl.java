@@ -7,6 +7,7 @@ import org.slf4j.Marker;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.client.RestTemplate;
@@ -57,6 +58,7 @@ public class ApiServiceImpl implements ApiService {
         return null; // or throw an exception, depending on your error handling strategy
     }
 
+    @Transactional
     public void executeAfterCommit(Runnable runnable) {
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronizationAdapter() {
             public void afterCommit() {
