@@ -1,17 +1,26 @@
 package com.service.login.auth.service;
 
+import com.service.login.auth.co.SignUpCO;
 import com.service.login.auth.domain.User;
 import com.service.login.auth.dto.TokenResponse;
 import com.service.login.auth.jwt.JwtTokenUtil;
 import com.service.login.auth.repo.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.util.ObjectUtils;
+import org.thymeleaf.context.Context;
+import org.thymeleaf.spring5.SpringTemplateEngine;
 
-import java.util.Base64;
-import java.util.List;
-import java.util.Optional;
+import javax.mail.MessagingException;
+import javax.mail.internet.MimeMessage;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 @Service
 public class UserServiceImpl implements UserService {
@@ -30,6 +39,7 @@ public class UserServiceImpl implements UserService {
 
     @Value("${module.task.url}")
     String taskUrl;
+
 
     @Override
     public User findByEmail(String username) {
@@ -73,10 +83,4 @@ public class UserServiceImpl implements UserService {
         userRepository.save(employee);
         return jwtToken;
     }
-
-
-
-
-
-
 }

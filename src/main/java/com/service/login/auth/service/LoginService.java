@@ -2,11 +2,19 @@ package com.service.login.auth.service;
 
 
 import com.service.login.auth.co.SignUpCO;
-import com.service.login.auth.domain.User;
-import com.service.login.auth.dto.ResponseDTO;
-import com.service.login.auth.exception.InvalidResponseException;
+import com.service.login.auth.co.SignUpResponse;
+
+
+import javax.mail.MessagingException;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.Map;
 
 public interface LoginService {
+    SignUpResponse register(SignUpCO regRequest) throws Exception;
+     void sendSuccessEmail(String recipientEmail, Map<String, Object> model) throws MessagingException, UnsupportedEncodingException;
 
-    ResponseDTO<User> sinUp(SignUpCO signUpCO) throws InvalidResponseException;
+     String sending(SignUpCO signUpRequest, String recipientEmail)
+            throws MessagingException, IOException;
 }
+

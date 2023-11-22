@@ -18,13 +18,11 @@ public class User {
     public String email;
     public String username;
     public String password;
-    public String profilePicUrl;
     @Column(length = 10000)
     public String accessToken;
     public String locale_code = "en_US";
-   public String firstName;
-   public String middleName;
-   public String lastName;
     public String uniqueId;
+
+
 }
 

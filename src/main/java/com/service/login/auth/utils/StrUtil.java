@@ -1,6 +1,7 @@
 package com.service.login.auth.utils;
 
 import java.security.SecureRandom;
+import java.util.Random;
 
 public class StrUtil {
 
@@ -48,6 +49,18 @@ public class StrUtil {
             }
         }
         return null;
+    }
+
+    public static String randomStr(String alphabet, int n) {
+        StringBuilder result = new StringBuilder();
+        Random random = new Random();
+
+        for (int i = 0; i < n; i++) {
+            int randomIndex = random.nextInt(alphabet.length());
+            result.append(alphabet.charAt(randomIndex));
+        }
+
+        return result.toString();
     }
 
 }
